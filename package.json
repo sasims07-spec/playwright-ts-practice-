@@ -1,0 +1,21 @@
+{
+  "name": "playwright-naveen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "codegen": "npx playwright codegen  https://naveenautomationlabs.com/opencart/index.php?route=account/register",
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "report": "npx playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "1.59.1",
+    "@types/node": "25.6.0"
+  }
+}

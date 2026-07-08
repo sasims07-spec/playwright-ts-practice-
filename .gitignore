@@ -1,0 +1,57 @@
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# env files (credentials)
+config/.env.*
+!config/.env.example
+
+# reports
+reports/
+allure-results/
+allure-report/
+playwright-report/
+test-results/
+
+# build
+dist/
+
+# auth
+src/data/auth.json
+storageState.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# logs
+*.log
+npm-debug.log*
+logs.txt
+
+# misc
+*.tgz
+
+# stray Chromium user-data dir from an old unresolved-envvar bug
+${PLAYWRIGHT_USER_DATA_DIR}/
+
+# Playwright MCP server artifacts (AI-agent browser sessions)
+.playwright-mcp/
+
+# Test runtime outputs — keep the folder but ignore downloaded files
+downloads/*
+!downloads/.gitkeep
+
+# Screenshot outputs from tests/screenshot.spec.ts (regenerated on every run)
+/RRegisterPage.png
+/RegisterPage1.png
+/RegisterPage2.jpeg
+/Logo.png
