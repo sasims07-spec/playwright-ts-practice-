@@ -9,6 +9,7 @@ test("google search test", async ({ page }) => {
 });
 
 test("amazon search test", async ({ page }) => {
+  test.skip(!!process.env.CI, "External site (Amazon) has bot detection and consent walls that break headless CI");
   await page.goto("https://www.amazon.com/");
   await page.getByRole("searchbox", { name: "Search Amazon" }).fill("Macbook Pro");
   await page.locator("div.s-suggestion span").filter({ hasText: "16 inch" }).click(); 

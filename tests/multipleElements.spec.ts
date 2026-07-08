@@ -19,6 +19,7 @@ import { test, Page, chromium, Browser, Locator } from "@playwright/test";
 }); */
 
 test("Total links on the page", async ({ page }) => {
+  test.skip(!!process.env.CI, "External site (Flipkart) blocks headless CI traffic — flaky and slow");
   await page.goto("https://www.flipkart.com/");
   //links: <a> tag
   //image: <img> tag
@@ -37,6 +38,7 @@ test("Total links on the page", async ({ page }) => {
 });
 
 test("Total images on the page", async ({ page }) => {
+  test.skip(!!process.env.CI, "External site (Flipkart) blocks headless CI traffic — flaky and slow");
   await page.goto("https://www.flipkart.com/");
   let allImages: Locator[] = await page.locator("img").all();
   let totalImages = allImages.length;

@@ -19,6 +19,7 @@ test('get started link', async ({ page }) => {
 
 
 test('google test2', async ({ }) => {
+  test.skip(!!process.env.CI, "External site (Google) triggers captcha / consent wall; also launches with channel:'chrome' + headless:false which aren't available on Linux CI runners");
   let browser: Browser = await chromium.launch({ channel: 'chrome', headless: false });
   let page: Page = await browser.newPage();
   await page.goto('https://google.com');
