@@ -1,0 +1,14 @@
+{
+  "name": "navlabs-multiuser-chat-demo",
+  "version": "1.0.0",
+  "description": "Naveen AutomationLabs — Playwright Multi-User Browser Context Demo App",
+  "scripts": {
+    "start": "node server.js",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  }
+}

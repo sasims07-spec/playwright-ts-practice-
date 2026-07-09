@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NavLabs Multi-User Chat Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; }
+
+  .header { background: #1a1d2e; border-bottom: 1px solid #2d3748; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
+  .header-logo { background: #6366f1; color: white; font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; }
+  .header-title { font-size: 15px; font-weight: 600; color: #e2e8f0; }
+  .header-sub { font-size: 12px; color: #718096; margin-left: auto; }
+
+  .app { display: flex; flex: 1; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar { width: 220px; background: #1a1d2e; border-right: 1px solid #2d3748; display: flex; flex-direction: column; padding: 16px; gap: 16px; }
+  .sidebar-section-label { font-size: 11px; font-weight: 600; color: #4a5568; text-transform: uppercase; letter-spacing: 1px; }
+  .users-list { display: flex; flex-direction: column; gap: 8px; }
+  .user-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .user-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .user-name { color: #e2e8f0; }
+  .user-you { font-size: 10px; color: #4a5568; }
+  .no-users { font-size: 13px; color: #4a5568; font-style: italic; }
+
+  .api-section { margin-top: auto; padding-top: 12px; border-top: 1px solid #2d3748; }
+  .api-label { font-size: 11px; font-weight: 600; color: #4a5568; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .api-route { font-size: 11px; color: #718096; font-family: monospace; padding: 3px 0; }
+  .api-route span { color: #6366f1; }
+
+  /* Main chat */
+  .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Login screen */
+  .login-screen { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .login-card { background: #1a1d2e; border: 1px solid #2d3748; border-radius: 12px; padding: 32px; width: 360px; text-align: center; }
+  .login-card h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .login-card p { font-size: 13px; color: #718096; margin-bottom: 24px; }
+  .login-card input { width: 100%; padding: 10px 14px; background: #0f1117; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 14px; margin-bottom: 12px; outline: none; transition: border-color 0.2s; }
+  .login-card input:focus { border-color: #6366f1; }
+  .login-card input::placeholder { color: #4a5568; }
+  .btn-join { width: 100%; padding: 10px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-join:hover { background: #4f46e5; }
+  .error-msg { font-size: 13px; color: #fc8181; margin-top: 8px; min-height: 18px; }
+
+  /* Messages */
+  .messages-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .messages-area::-webkit-scrollbar { width: 4px; }
+  .messages-area::-webkit-scrollbar-track { background: transparent; }
+  .messages-area::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 4px; }
+
+  .msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .msg-avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+  .msg-body { flex: 1; }
+  .msg-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+  .msg-user { font-size: 13px; font-weight: 600; }
+  .msg-time { font-size: 11px; color: #4a5568; }
+  .msg-text { font-size: 14px; color: #cbd5e0; line-height: 1.5; background: #1a1d2e; border-radius: 0 8px 8px 8px; padding: 8px 12px; display: inline-block; max-width: 600px; }
+  .msg.own .msg-text { background: #1e1b4b; }
+
+  .system-msg { text-align: center; font-size: 12px; color: #4a5568; padding: 4px 0; }
+
+  /* Input area */
+  .input-area { padding: 16px 20px; border-top: 1px solid #2d3748; background: #1a1d2e; }
+  .input-row { display: flex; gap: 10px; align-items: center; }
+  .you-badge { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 8px; color: white; white-space: nowrap; }
+  .msg-input { flex: 1; padding: 10px 14px; background: #0f1117; border: 1px solid #2d3748; border-radius: 8px; color: #e2e8f0; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .msg-input:focus { border-color: #6366f1; }
+  .msg-input::placeholder { color: #4a5568; }
+  .btn-send { padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-send:hover { background: #4f46e5; }
+  .btn-leave { padding: 10px 14px; background: transparent; color: #718096; border: 1px solid #2d3748; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-leave:hover { background: #2d3748; color: #e2e8f0; }
+
+  .data-attrs { font-size: 11px; color: #4a5568; margin-top: 8px; }
+  .data-attrs code { color: #6366f1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-logo">NAL</span>
+  <span class="header-title">Multi-User Chat Demo</span>
+  <div id="storageBanner" style="margin-left:16px; font-size:12px; padding:4px 12px; border-radius:6px; font-weight:600; background:#2d3748; color:#fc8181;">
+    ⚠️ localStorage MODE — tabs will share session
+  </div>
+  <span class="header-sub">Naveen AutomationLabs — Playwright Browser Context Demo</span>
+</div>
+
+<div class="app">
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-section-label">Online Users</div>
+      <div class="users-list" id="usersList">
+        <div class="no-users">No users yet</div>
+      </div>
+    </div>
+
+    <div class="api-section">
+      <div class="api-label">REST Endpoints</div>
+      <div class="api-route"><span>POST</span> /api/join</div>
+      <div class="api-route"><span>POST</span> /api/send</div>
+      <div class="api-route"><span>GET</span>  /api/messages</div>
+      <div class="api-route"><span>POST</span> /api/leave</div>
+      <div class="api-route"><span>POST</span> /api/reset</div>
+    </div>
+  </div>
+
+  <div class="chat-area">
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+      <div class="login-card">
+        <h2>Join the Chat</h2>
+        <p>Enter a username to join. Open multiple tabs or use Playwright browser contexts to simulate multiple users.</p>
+        <div id="loginBanner" style="font-size:12px; padding:8px 12px; border-radius:8px; margin-bottom:16px; background:#2d3748; color:#fc8181; text-align:left; line-height:1.6;">
+          <strong>⚠️ localStorage MODE active</strong><br>
+          Open a new tab → you'll already be logged in as the same user.<br>
+          Tabs share localStorage. You can't test multi-user this way.
+        </div>
+        <input
+          type="text"
+          id="usernameInput"
+          placeholder="Enter username (e.g. alice, bob)"
+          data-testid="username-input"
+          maxlength="20"
+          autocomplete="off"
+        />
+        <button class="btn-join" id="joinBtn" data-testid="join-btn">Join Chat</button>
+        <div class="error-msg" id="errorMsg"></div>
+      </div>
+    </div>
+
+    <!-- Chat Screen (hidden initially) -->
+    <div id="chatScreen" style="display:none; flex:1; flex-direction:column; overflow:hidden; display:none;">
+      <div class="messages-area" id="messagesArea" data-testid="messages-area">
+        <!-- messages rendered here -->
+      </div>
+      <div class="input-area">
+        <div class="input-row">
+          <span class="you-badge" id="youBadge" data-testid="you-badge">alice</span>
+          <input
+            type="text"
+            class="msg-input"
+            id="messageInput"
+            placeholder="Type a message..."
+            data-testid="message-input"
+            maxlength="300"
+            autocomplete="off"
+          />
+          <button class="btn-send" id="sendBtn" data-testid="send-btn">Send</button>
+          <button class="btn-leave" id="leaveBtn" data-testid="leave-btn">Leave</button>
+        </div>
+        <div class="data-attrs">
+          Locators: <code>data-testid="username-input"</code> · <code>data-testid="join-btn"</code> · <code>data-testid="message-input"</code> · <code>data-testid="send-btn"</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentUser = localStorage.getItem('chat_user');
+let userColor = localStorage.getItem('chat_color');
+let lastTimestamp = 0;
+let pollTimer = null;
+
+const loginScreen = document.getElementById('loginScreen');
+const chatScreen = document.getElementById('chatScreen');
+const usernameInput = document.getElementById('usernameInput');
+const joinBtn = document.getElementById('joinBtn');
+const errorMsg = document.getElementById('errorMsg');
+const messagesArea = document.getElementById('messagesArea');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const leaveBtn = document.getElementById('leaveBtn');
+const youBadge = document.getElementById('youBadge');
+const usersList = document.getElementById('usersList');
+
+// --- Auto-restore session from localStorage (this is what causes the tab problem) ---
+// Validate with server first — if server restarted, the user won't exist anymore
+if (currentUser && userColor) {
+  fetch('/api/messages?since=0')
+    .then(r => r.json())
+    .then(data => {
+      const stillOnline = data.users.some(u => u.name === currentUser);
+      if (!stillOnline) {
+        localStorage.removeItem('chat_user');
+        localStorage.removeItem('chat_color');
+        currentUser = null;
+        userColor = null;
+        return;
+      }
+      loginScreen.style.display = 'none';
+      chatScreen.style.display = 'flex';
+      chatScreen.style.flexDirection = 'column';
+      chatScreen.style.overflow = 'hidden';
+      chatScreen.style.flex = '1';
+      youBadge.textContent = currentUser;
+      youBadge.style.background = userColor;
+      startPolling();
+    })
+    .catch(() => {
+      localStorage.removeItem('chat_user');
+      localStorage.removeItem('chat_color');
+      currentUser = null;
+      userColor = null;
+    });
+}
+
+usernameInput.addEventListener('keydown', e => { if (e.key === 'Enter') joinBtn.click(); });
+messageInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendBtn.click(); });
+
+joinBtn.addEventListener('click', async () => {
+  const username = usernameInput.value.trim();
+  if (!username) { errorMsg.textContent = 'Please enter a username'; return; }
+  errorMsg.textContent = '';
+  try {
+    const res = await fetch('/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
+    const data = await res.json();
+    if (!res.ok) { errorMsg.textContent = data.error || 'Failed to join'; return; }
+    currentUser = data.username;
+    userColor = data.color;
+    localStorage.setItem('chat_user', currentUser);
+    localStorage.setItem('chat_color', userColor);
+    loginScreen.style.display = 'none';
+    chatScreen.style.display = 'flex';
+    chatScreen.style.flexDirection = 'column';
+    chatScreen.style.overflow = 'hidden';
+    chatScreen.style.flex = '1';
+    youBadge.textContent = currentUser;
+    youBadge.style.background = userColor;
+    messageInput.focus();
+    startPolling();
+  } catch (e) { errorMsg.textContent = 'Server error. Is the server running?'; }
+});
+
+sendBtn.addEventListener('click', async () => {
+  const text = messageInput.value.trim();
+  if (!text) return;
+  messageInput.value = '';
+  try {
+    await fetch('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: currentUser, text }) });
+  } catch (e) { console.error(e); }
+});
+
+leaveBtn.addEventListener('click', async () => {
+  stopPolling();
+  await fetch('/api/leave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: currentUser }) });
+  currentUser = null;
+  userColor = null;
+  localStorage.removeItem('chat_user');
+  localStorage.removeItem('chat_color');
+  lastTimestamp = 0;
+  chatScreen.style.display = 'none';
+  loginScreen.style.display = 'flex';
+  usernameInput.value = '';
+  messagesArea.innerHTML = '';
+});
+
+function startPolling() {
+  pollTimer = setInterval(fetchMessages, 1000);
+  fetchMessages();
+}
+function stopPolling() { clearInterval(pollTimer); }
+
+async function fetchMessages() {
+  try {
+    const res = await fetch(`/api/messages?since=${lastTimestamp}`);
+    const data = await res.json();
+    if (data.messages.length > 0) {
+      data.messages.forEach(renderMessage);
+      lastTimestamp = data.messages[data.messages.length - 1].timestamp;
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+    renderUsers(data.users);
+  } catch (e) {}
+}
+
+function renderMessage(msg) {
+  if (msg.user === 'system') {
+    const div = document.createElement('div');
+    div.className = 'system-msg';
+    div.dataset.testid = 'system-message';
+    div.textContent = msg.text;
+    messagesArea.appendChild(div);
+    return;
+  }
+  const isOwn = msg.user === currentUser;
+  const div = document.createElement('div');
+  div.className = `msg${isOwn ? ' own' : ''}`;
+  div.dataset.testid = 'chat-message';
+  div.dataset.user = msg.user;
+  const initials = msg.user.slice(0, 2).toUpperCase();
+  const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  div.innerHTML = `
+    <div class="msg-avatar" style="background:${msg.color}" data-testid="message-avatar">${initials}</div>
+    <div class="msg-body">
+      <div class="msg-meta">
+        <span class="msg-user" style="color:${msg.color}" data-testid="message-username">${msg.user}</span>
+        <span class="msg-time">${time}</span>
+      </div>
+      <div class="msg-text" data-testid="message-text">${escapeHtml(msg.text)}</div>
+    </div>
+  `;
+  messagesArea.appendChild(div);
+}
+
+function renderUsers(users) {
+  if (!users.length) { usersList.innerHTML = '<div class="no-users">No users yet</div>'; return; }
+  usersList.innerHTML = users.map(u => `
+    <div class="user-item" data-testid="online-user" data-username="${u.name}">
+      <div class="user-dot" style="background:${u.color}"></div>
+      <span class="user-name">${u.name}</span>
+      ${u.name === currentUser ? '<span class="user-you">(you)</span>' : ''}
+    </div>
+  `).join('');
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
